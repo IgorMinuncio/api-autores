@@ -25,7 +25,7 @@ def token_obrigatorio(f):
     return decorated
 
 
-# Rota de login
+# Função de login
 @app.route('/login')
 def login():
     auth = request.authorization
