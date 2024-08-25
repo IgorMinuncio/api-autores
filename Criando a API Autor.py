@@ -3,7 +3,7 @@ from estrutura_db import Autor,Postagem,app,db
 import jwt
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-
+# adicionado comentário teste
 # Função para reutilizar a validação de tokens
 def token_obrigatorio(f):
     @wraps(f)
