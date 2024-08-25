@@ -6,6 +6,7 @@ app = Flask(__name__)
 # Criar um instância de SQLAlchemy
 app.config['SECRET_KEY'] = 'FJAIW21324DJI!@#$*'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db' CONEXÃO COM SQL LITE
+# conexão com supbase
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres.okfroqppvwqdppnytvro:6QBu340zveUq6IBV@aws-0-us-east-1.pooler.supabase.com:6543/postgres'
 
 db = SQLAlchemy(app)
