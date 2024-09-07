@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 #Configuração da porta
-if __name__ == '__main__': app.run(host='0.0.0.0', port=8080, debug=True)
+if __name__ == '__main__': app.run(host='0.0.0.0', port=8080, debug=False)
 
 # Função para reutilizar a validação de tokens
 def token_obrigatorio(f):
