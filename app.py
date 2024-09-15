@@ -4,9 +4,6 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
-#Configuração da porta
-if __name__ == '__main__': app.run(host='0.0.0.0', port=8080, debug=False)
-
 # Função para reutilizar a validação de tokens
 def token_obrigatorio(f):
     @wraps(f)
@@ -199,8 +196,4 @@ def excluir_autor(autor, id_autor):
 
     return jsonify({'mensagem': 'Autor excluído com sucesso!'})
 
-
-
-
-
-app.run(port=5000, host='localhost', debug=True)
+app.run(port=5000, host='0.0.0.0', debug=True)
