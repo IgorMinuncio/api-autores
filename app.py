@@ -76,7 +76,7 @@ def nova_postagem(autor):
     for postagem in novas_postagens:
         autor_conforme_id = Autor.query.filter_by(id_autor=postagem['id_autor']).first()
         if not autor_conforme_id:
-            pass
+            return jsonify('Id de autor informado não é válido!')
         else:
             nova_postagem = Postagem(titulo=postagem['titulo'], id_autor=postagem['id_autor'])
             db.session.add(nova_postagem)
