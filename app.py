@@ -109,7 +109,7 @@ def alterar_postagem(autor, id_postagem):
 # Alterar uma postagem - DELETE http://localhost:5000/postagem/1
 @app.route('/postagem/<int:id_postagem>', methods=['DELETE'])
 @token_obrigatorio
-def excluir_postagem(autor, id_postagem):
+def excluir_postagem(psotagem, id_postagem):
     try:
         postagem_a_excluir = Postagem.query.filter_by(id_postagem=id_postagem).first()
         if postagem_a_excluir[id_postagem] is not None:
