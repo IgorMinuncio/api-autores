@@ -4,6 +4,12 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
+def sort_postagens(json):
+    try:
+        return int(json['id'])
+    except KeyError:
+        return 0
+
 # Função para reutilizar a validação de tokens
 def token_obrigatorio(f):
     @wraps(f)
@@ -24,7 +30,6 @@ def token_obrigatorio(f):
         return f(autor, *args, **kwargs)
     return decorated
 
-
 # Função de login
 @app.route('/login')
 def login():
@@ -44,25 +49,28 @@ def login():
 # Rota padrão - GET https://localhost:5000
 @app.route('/postagem', methods=['GET'])
 @token_obrigatorio
-def obter_postagens(autor):
+def obter_postagens(postagem):
     postagens = Postagem.query.all()
     lista_postagens = []
     for postagem in postagens:
         postagem_atual = {}
+        postagem_atual['id'] = postagem.id_postagem
         postagem_atual['titulo'] = postagem.titulo
         postagem_atual['id_autor'] = postagem.id_autor
         lista_postagens.append(postagem_atual)
+        lista_postagens.sort(key=sort_postagens, reverse=False)
     return jsonify({'postagens': lista_postagens})
 
 # Obter postagem por ID - GET http://localhost:5000/postagem/1
 @app.route('/postagem/<int:id_postagem>', methods=['GET'])
 @token_obrigatorio
-def obter_postagem_por_indice(autor, id_postagem):
+def obter_postagem_por_indice(postagem, id_postagem):
     postagem = Postagem.query.filter_by(id_postagem=id_postagem).first()
     if not postagem:
-        return jsonify('Esta postagem não foi encontrada')
+        return jsonify({'Mensagem':'Esta postagem não existe ou foi excluída'})
     
     postagem_atual = {}
+    postagem_atual['id'] = postagem.id_postagem
     postagem_atual['titulo'] = postagem.titulo
     postagem_atual['id_autor'] = postagem.id_autor
 
@@ -71,52 +79,53 @@ def obter_postagem_por_indice(autor, id_postagem):
 # Criar uma nova postagem - POST http://localhost:5000/postagem
 @app.route('/postagem', methods=['POST'])
 @token_obrigatorio
-def nova_postagem(autor):
+def nova_postagem(postagem):
     novas_postagens = request.get_json()
     for postagem in novas_postagens:
         autor_conforme_id = Autor.query.filter_by(id_autor=postagem['id_autor']).first()
         if not autor_conforme_id:
-            return jsonify('Id de autor informado não é válido!')
+            return jsonify({'Mensagem':'Id de autor informado não é válido!'})
         else:
             nova_postagem = Postagem(titulo=postagem['titulo'], id_autor=postagem['id_autor'])
             db.session.add(nova_postagem)
     
     db.session.commit()
 
-    return jsonify({'mensagem': 'Postage(s) criada(s) com sucesso!'})
+    return jsonify({'Mensagem': 'Postage(s) criada(s) com sucesso!'})
 
 # Alterar uma postagem - PUT http://localhost:5000/postagem/1
 @app.route('/postagem/<int:id_postagem>', methods=['PUT'])
 @token_obrigatorio
-def alterar_postagem(autor, id_postagem):
-    postagem_a_alterar = request.get_json()
-    postagem_alterado = Postagem.query.filter_by(id_postagem=id_postagem).first()
+def alterar_postagem(postagem, id_postagem):
+    json_com_alteracao = request.get_json()
+    postagem_a_alterar = Postagem.query.filter_by(id_postagem=id_postagem).first()
     
     if not postagem_a_alterar:
-        return jsonify({'Mensagem': 'Está postagem não foi encontrada!'})
+        return jsonify({'Mensagem': 'Esta postagem não existe ou foi excluída.'})
     try:       
-        postagem_alterado.titulo = postagem_a_alterar['titulo']
+        postagem_a_alterar.titulo = json_com_alteracao['titulo']
     except:
         pass
     try:
-        postagem_alterado.id_autor = postagem_a_alterar['id_autor']
+        postagem_a_alterar.id_autor = json_com_alteracao['id_autor']
     except:
         pass
     
     db.session.commit()
-    return jsonify({'mensagem': 'Postagem alterada com sucesso!'})
+    return jsonify({'Mensagem': 'Postagem alterada com sucesso!'})
 
 # Alterar uma postagem - DELETE http://localhost:5000/postagem/1
 @app.route('/postagem/<int:id_postagem>', methods=['DELETE'])
 @token_obrigatorio
-def excluir_postagem(psotagem, id_postagem):
-    try:
-        postagem_a_excluir = Postagem.query.filter_by(id_postagem=id_postagem).first()
-        if postagem_a_excluir[id_postagem] is not None:
-            del postagem_a_excluir[id_postagem]
-            return jsonify(f'Foi excluído a postagem {postagem_a_excluir[id_postagem]}', 200)
-    except:
-        return jsonify(f'Não foi possível encontrar a postagem para exclusão', 400)
+def excluir_postagem(postagem, id_postagem):
+    postagem_a_excluir = Postagem.query.filter_by(id_postagem=id_postagem).first()
+    if not postagem_a_excluir:
+        return jsonify({'Mensagem': 'Postagem não foi encontrada!'})
+    else:    
+        db.session.delete(postagem_a_excluir)
+
+    db.session.commit()
+    return jsonify({'Mensagem': 'Postagem excluída com sucesso!'})
 
 
 @app.route('/autores', methods=['GET'])
