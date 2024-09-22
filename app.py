@@ -4,7 +4,7 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
-def sort_postagens(json):
+def sort_list_by_id(json):
     try:
         return int(json['id'])
     except KeyError:
@@ -46,7 +46,7 @@ def login():
         return jsonify({'token':token})
     return make_response('Login inválido', 401, {'WWW-Authenticate': 'Basic realm="Login obrigatório"'})
 
-# Rota padrão - GET https://localhost:5000
+# Obter postagens - GET https://localhost:5000/postagem
 @app.route('/postagem', methods=['GET'])
 @token_obrigatorio
 def obter_postagens(postagem):
@@ -58,7 +58,8 @@ def obter_postagens(postagem):
         postagem_atual['titulo'] = postagem.titulo
         postagem_atual['id_autor'] = postagem.id_autor
         lista_postagens.append(postagem_atual)
-        lista_postagens.sort(key=sort_postagens, reverse=False)
+        lista_postagens.sort(key=sort_list_by_id, reverse=False)
+
     return jsonify({'postagens': lista_postagens})
 
 # Obter postagem por ID - GET http://localhost:5000/postagem/1
@@ -114,7 +115,7 @@ def alterar_postagem(postagem, id_postagem):
     db.session.commit()
     return jsonify({'Mensagem': 'Postagem alterada com sucesso!'})
 
-# Alterar uma postagem - DELETE http://localhost:5000/postagem/1
+# Excluir uma postagem - DELETE http://localhost:5000/postagem/1
 @app.route('/postagem/<int:id_postagem>', methods=['DELETE'])
 @token_obrigatorio
 def excluir_postagem(postagem, id_postagem):
@@ -127,8 +128,8 @@ def excluir_postagem(postagem, id_postagem):
     db.session.commit()
     return jsonify({'Mensagem': 'Postagem excluída com sucesso!'})
 
-
-@app.route('/autores', methods=['GET'])
+# Obter autores - GET http://localhost:5000/autor
+@app.route('/autor', methods=['GET'])
 @token_obrigatorio
 def obter_autores(autor):
     autores = Autor.query.all()
@@ -139,15 +140,17 @@ def obter_autores(autor):
         autor_atual['nome'] = autor_buscado.nome
         autor_atual['email'] = autor_buscado.email
         lista_de_autores.append(autor_atual)
+        lista_de_autores.sort(key=sort_list_by_id, reverse=False)
 
     return jsonify({'autores': lista_de_autores})
 
-@app.route('/autores/<int:id_autor>', methods=['GET'])
+# Obter autores por id - GET http://localhost:5000/autor/1
+@app.route('/autor/<int:id_autor>', methods=['GET'])
 @token_obrigatorio
 def obter_autor_por_id(autor, id_autor):
     autor = Autor.query.filter_by(id_autor=id_autor).first()
     if not autor:
-        return jsonify('Autor não encontrado!')
+        return jsonify({'Mensagem':'Este Autor não existe ou foi excluído!'})
     autor_atual = {}
     autor_atual['id_autor'] = autor.id_autor
     autor_atual['nome'] = autor.nome
@@ -155,7 +158,8 @@ def obter_autor_por_id(autor, id_autor):
 
     return jsonify({'autor': autor_atual})
 
-@app.route('/autores', methods=['POST'])
+# Criar um novo autor - POST http://localhost:5000/autor
+@app.route('/autor', methods=['POST'])
 @token_obrigatorio
 def novo_autor(autor):
     novos_autores = request.get_json()
@@ -164,10 +168,10 @@ def novo_autor(autor):
         db.session.add(novo_autor)
     
     db.session.commit()
+    return jsonify({'Mensagem': 'Autor(es) criado(s) com sucesso!'})
 
-    return jsonify({'mensagem': 'Usuário(s) criado com sucesso!'})
-
-@app.route('/autores/<int:id_autor>', methods=['PUT'])
+# Alterar um autor - PUT http://localhost:5000/autor/1
+@app.route('/autor/<int:id_autor>', methods=['PUT'])
 @token_obrigatorio
 def alterar_autor(autor, id_autor):
     autor_a_alterar = request.get_json()
@@ -190,19 +194,19 @@ def alterar_autor(autor, id_autor):
         pass
     
     db.session.commit()
-    return jsonify({'mensagem': 'Usuário alterado com sucesso!'})
+    return jsonify({'Mensagem': 'Usuário alterado com sucesso!'})
 
-
-@app.route('/autores/<int:id_autor>', methods=['DELETE'])
+# Excluir um autor - DELETE http://localhost:5000/autor/1
+@app.route('/autor/<int:id_autor>', methods=['DELETE'])
 @token_obrigatorio
 def excluir_autor(autor, id_autor):
     autor_existente = Autor.query.filter_by(id_autor=id_autor).first()
     if not autor_existente:
-        return jsonify({'mensagem': 'Este autor não foi encontrado'})
+        return jsonify({'Mensagem': 'Este autor não foi encontrado'})
 
     db.session.delete(autor_existente)
     db.session.commit()
 
-    return jsonify({'mensagem': 'Autor excluído com sucesso!'})
+    return jsonify({'Mensagem': 'Autor excluído com sucesso!'})
 
 app.run(port=5000, host='0.0.0.0', debug=True)
